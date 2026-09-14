@@ -1,0 +1,27 @@
+paths:
+  raw_data_path: 'preprocessing/Churn_Modelling.csv'
+  output_dir: 'preprocessing/churn_preprocessing/'
+  artifact_dir: 'preprocessing/artifacts/'
+
+features:
+  drop_columns:
+    - 'RowNumber'
+    - 'CustomerId'
+    - 'Surname'
+  target_column: 'Exited'
+  skewed_columns:
+    - 'Age'
+  categorical_columns:
+    - 'Geography'
+    - 'Gender'
+  scaling_columns:
+    - 'CreditScore'
+    - 'Age'
+    - 'Tenure'
+    - 'Balance'
+    - 'NumOfProducts'
+    - 'EstimatedSalary'
+
+params:
+  test_size: 0.20
+  random_state: 42
