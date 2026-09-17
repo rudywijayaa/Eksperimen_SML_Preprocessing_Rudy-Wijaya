@@ -7,13 +7,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 def main():
-    # Load Config (Sesuaikan path ke folder preprocessing)
-    config_path = os.path.join(os.path.dirname(__file__), "config.yml")
+    # Dynamic BASE_DIR (folder tempat file script ini berada: /preprocessing)
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    # Load Config dengan path yang aman
+    config_path = os.path.join(BASE_DIR, "config.yml")
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
+    # Helper function untuk memastikan path selalu tepat dari BASE_DIR
+    def get_path(path_str):
+        if os.path.isabs(path_str):
+            return path_str
+        return os.path.normpath(os.path.join(BASE_DIR, path_str))
+
     # Load Data Raw
-    raw_path = config["paths"]["raw_data_path"]
+    raw_path = get_path(config["paths"]["raw_data_path"])
     df = pd.read_csv(raw_path)
 
     # Drop Identifier & Split Features/Target
@@ -21,13 +30,15 @@ def main():
     X = df_cleaned.drop(columns=[config["features"]["target_column"]])
     y = df_cleaned[config["features"]["target_column"]]
 
-    # Train-Test Split (Stratified)
+    # Train-Test Split (Stratified) + .copy() untuk hindari SettingWithCopyWarning
     X_train, X_test, y_train, y_test = train_test_split(
         X, y,
         test_size=config["params"]["test_size"],
         random_state=config["params"]["random_state"],
         stratify=y
     )
+    X_train = X_train.copy()
+    X_test = X_test.copy()
 
     # Log Transformation
     for col in config["features"]["skewed_columns"]:
@@ -54,9 +65,9 @@ def main():
     X_train[num_cols] = scaler.fit_transform(X_train[num_cols])
     X_test[num_cols] = scaler.transform(X_test[num_cols])
 
-    # Save Processed Datasets
-    out_dir = config["paths"]["output_dir"]
-    art_dir = config["paths"]["artifact_dir"]
+    # Save Processed Datasets & Artifacts
+    out_dir = get_path(config["paths"]["output_dir"])
+    art_dir = get_path(config["paths"]["artifact_dir"])
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(art_dir, exist_ok=True)
 
